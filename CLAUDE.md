@@ -6,6 +6,10 @@ so the menu and F12 edit the same values. Build with `scripts\pack.ps1 -SPTPath 
 from PowerShell, not Bash: Bash mangles `H:\SPT4.1.X`. The pack script also rejects config names
 BepInEx would throw on.
 
+Repo: https://github.com/JoelHauser/cameramode (branch `main`, first pushed 2026-10-25 as 0.5.1).
+Commit as Joel Hauser <joel.hauser@gmail.com>. No GitHub release yet; release zips come from
+`scripts\pack.ps1` into `dist\` (git-ignored) and contain only `BepInEx/plugins/CameraMode.dll`.
+
 ## State as it stands
 
 - 0.1.0 (one key, fixed behaviour) installed 2026-10-24, never run; backed up in
@@ -28,7 +32,7 @@ BepInEx would throw on.
   scroll view looks the thumb up by name). The Freeze AI key (default Page Down; F1-F4 are EFT game
   keys) freezes bots any time in raid. `CameraModeState.SyncFreeze`: frozen while the key says so OR
   Camera Mode has "Freeze AI in place" on; the key unfreezing overrides Camera Mode until it next
-  turns on. No git repo yet.
+  turns on.
 - 0.5.1 **installed in H:\SPT4.1.X 2026-10-25 (hash = build; 0.5.0 backed up in plugin-backups), not run in game.** Joel saw bots with "superspeed" after
   using Freeze AI (log: freeze toggled repeatedly, ORBIT running). Freeze now also pauses
   `AICoreController` (bot brains + ORBIT's tick); see Freeze AI below.
