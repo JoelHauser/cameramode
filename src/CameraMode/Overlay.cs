@@ -4,8 +4,8 @@ namespace CameraMode
 {
     /// <summary>
     /// Letterbox bars and the composition grid, drawn with IMGUI on top of the picture while
-    /// Camera Mode is on. The bars are part of the frame and so show in screenshots; the grid is a
-    /// guide and is skipped while a screenshot is taken.
+    /// Camera Mode is on. The bars only preview the shape: screenshots are cropped to the frame
+    /// (<see cref="Screenshot"/>). The grid is a guide and is skipped while a screenshot is taken.
     /// </summary>
     internal static class Overlay
     {
@@ -95,7 +95,8 @@ namespace CameraMode
         }
 
         /// <summary>The largest centred rectangle of the given shape; the whole screen for none.</summary>
-        private static Rect Frame(float ratio)
+        /// <remarks>GUI coordinates: y counts down from the top.</remarks>
+        internal static Rect Frame(float ratio)
         {
             float width = Screen.width;
             float height = Screen.height;

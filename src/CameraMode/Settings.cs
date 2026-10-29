@@ -229,7 +229,7 @@ namespace CameraMode
             Bloom = Bind(config, Effects, "Bloom", 0,
                 "Extra glow around bright lights, on top of the game's own. 0 is off.", range: new AcceptableValueRange<int>(0, 100));
             LetterboxBars = Bind(config, Effects, "Letterbox", Letterbox.Off,
-                "Black bars that frame the picture to a film or photo shape. They show in screenshots.");
+                "Frames the picture to a film or photo shape. Screenshots are cropped to it: that shape, no black bars.");
             CompositionGrid = Bind(config, Effects, "Composition grid", false,
                 "Rule-of-thirds lines to line up a shot. Never in screenshots.");
 

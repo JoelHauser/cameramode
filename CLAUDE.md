@@ -37,6 +37,8 @@ Commit as Joel Hauser <joel.hauser@gmail.com>. No GitHub release yet; release zi
   using Freeze AI (log: freeze toggled repeatedly, ORBIT running). Freeze now also pauses
   `AICoreController` (bot brains + ORBIT's tick); see Freeze AI below.
   The 0.1.0 cfg section "Camera Mode" is orphaned by the numbered sections; harmless.
+- 0.5.2 **built 2026-10-28, not installed, not run in game.** Letterbox screenshots are cropped to
+  the shape instead of saving the bars; see Letterbox below.
 - Look in `BepInEx\LogOutput.log` for these lines on a toggle:
   `HUD: N objects, N canvases hidden`, `Model: N renderers hidden`, `Screen: N effects hidden`,
   `AI: player removed from N enemy and N neutral lists`, `Godmode: on`, `Vitals: ...`,
@@ -123,9 +125,13 @@ change goes through `Defer`, applied after the window, so the IMGUI layout never
   over the same public fields PPv2 enumerates (`enabled` included).
 - **Roll** (`CameraRoll`): the rotation is added in `Camera.onPreCull` and taken off in
   `Camera.onPostRender`, so only the rendered picture tilts.
-- **Letterbox and grid** (`Overlay`): IMGUI. The bars show in screenshots; the grid, menu and message
-  are skipped while `Screenshot.Capturing`. Screenshots go to the folder PreloaderUI uses
-  (Documents\Escape from Tarkov\Screenshots), through `ScreenCapture.CaptureScreenshot`.
+- **Letterbox and grid** (`Overlay`): IMGUI. The grid, menu and message are skipped while
+  `Screenshot.Capturing`. Screenshots go to the folder PreloaderUI uses
+  (Documents\Escape from Tarkov\Screenshots). Letterbox Off: `ScreenCapture.CaptureScreenshot`.
+  Up to 0.5.1 the bars were saved in the PNG (Joel: "it basically just creates black bars"); since
+  0.5.2 a letterbox shot is `ReadPixels` of just `Overlay.Frame` after WaitForEndOfFrame (GUI y is
+  top-down, ReadPixels bottom-up), so 4:3 on 3440x1440 saves 1920x1440. Resolution is capped by the
+  screen: the shape is cropped, not re-rendered. Log line: `Screenshot cropped to WxH (ratio)`.
 - **Shared parts**: AI stealth and godmode are wanted by Camera Mode, UFO mode or both.
   `CameraModeState.SyncShared` turns each on while either mode asks for it; `AiStealth` and
   `GodMode` keep their own player reference instead of reading a mode's.

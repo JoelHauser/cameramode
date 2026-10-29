@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.IO;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CameraMode
@@ -12,6 +13,10 @@ namespace CameraMode
     /// ScreenCapture.CaptureScreenshot writes the frame it is called in once that frame is done,
     /// IMGUI included. So <see cref="Capturing"/> is raised one frame ahead, which keeps the menu
     /// out of that frame, and lowered after it.
+    ///
+    /// With a letterbox shape set, the bars are only a preview: the frame inside them is read from
+    /// the back buffer at the end of the frame (ReadPixels) and saved on its own, so a 4:3 shot on a
+    /// 3440x1440 screen is a 1920x1440 picture, not a 3440x1440 one with black bars.
     /// </summary>
     internal static class Screenshot
     {
@@ -34,12 +39,16 @@ namespace CameraMode
             Capturing = true;
             yield return null;
 
+            float ratio = Overlay.Ratio(Settings.LetterboxBars.Value);
             string path = null;
             try
             {
                 Directory.CreateDirectory(Folder);
                 path = Path.Combine(Folder, $"CameraMode {DateTime.Now:yyyy-MM-dd HH-mm-ss}.png");
-                ScreenCapture.CaptureScreenshot(path);
+                if (ratio <= 0f)
+                {
+                    ScreenCapture.CaptureScreenshot(path);
+                }
             }
             catch (Exception e)
             {
@@ -48,6 +57,12 @@ namespace CameraMode
             }
 
             yield return new WaitForEndOfFrame();
+
+            if (path != null && ratio > 0f && !SaveFrame(Overlay.Frame(ratio), path))
+            {
+                path = null;
+            }
+
             yield return null;
             Capturing = false;
 
@@ -55,6 +70,49 @@ namespace CameraMode
             {
                 CameraModePlugin.Log.LogInfo($"Screenshot saved: {path}");
                 Toast.Show("Screenshot saved", force: true);
+            }
+        }
+
+        /// <summary>Reads the framed part of the finished frame and writes it as a PNG. Must run
+        /// after WaitForEndOfFrame, when the back buffer holds the whole picture.</summary>
+        private static bool SaveFrame(Rect frame, string path)
+        {
+            Texture2D texture = null;
+            try
+            {
+                int width = (int)frame.width;
+                int height = (int)frame.height;
+                // ReadPixels counts y up from the bottom; the GUI frame counts it down from the top.
+                var source = new Rect(frame.x, Screen.height - frame.yMax, width, height);
+                texture = new Texture2D(width, height, TextureFormat.RGB24, false);
+                texture.ReadPixels(source, 0, 0, false);
+                texture.Apply(false);
+                byte[] png = texture.EncodeToPNG();
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        File.WriteAllBytes(path, png);
+                    }
+                    catch (Exception e)
+                    {
+                        CameraModePlugin.Log.LogError($"Screenshot failed to write {path}: {e}");
+                    }
+                });
+                CameraModePlugin.Log.LogInfo($"Screenshot cropped to {width}x{height} ({Overlay.Label(Settings.LetterboxBars.Value)})");
+                return true;
+            }
+            catch (Exception e)
+            {
+                CameraModePlugin.Log.LogError($"Screenshot failed: {e}");
+                return false;
+            }
+            finally
+            {
+                if (texture != null)
+                {
+                    UnityEngine.Object.Destroy(texture);
+                }
             }
         }
     }
