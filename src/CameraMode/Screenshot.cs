@@ -10,13 +10,14 @@ namespace CameraMode
     /// Saves a PNG of the screen without the Camera Mode menu, message or grid, to the folder the
     /// game itself uses (PreloaderUI.ScreenshotsFolderPath: Documents\Escape from Tarkov\Screenshots).
     ///
-    /// ScreenCapture.CaptureScreenshot writes the frame it is called in once that frame is done,
-    /// IMGUI included. So <see cref="Capturing"/> is raised one frame ahead, which keeps the menu
-    /// out of that frame, and lowered after it.
+    /// The picture is read from the back buffer at the end of the frame (ReadPixels), IMGUI
+    /// included. So <see cref="Capturing"/> is raised one frame ahead, which keeps the menu out of
+    /// that frame, and lowered after it.
     ///
-    /// With a letterbox shape set, the bars are only a preview: the frame inside them is read from
-    /// the back buffer at the end of the frame (ReadPixels) and saved on its own, so a 4:3 shot on a
-    /// 3440x1440 screen is a 1920x1440 picture, not a 3440x1440 one with black bars.
+    /// With a letterbox shape set, the bars are only a preview: only the frame inside them is read,
+    /// so a 4:3 shot on a 3440x1440 screen is a 1920x1440 picture, not a 3440x1440 one with black
+    /// bars. Off reads the whole screen. ScreenCapture.CaptureScreenshot is not used: in 0.5.2 it
+    /// logged three shots as saved on 2026-10-29 and wrote none of them, with no error.
     /// </summary>
     internal static class Screenshot
     {
@@ -45,10 +46,6 @@ namespace CameraMode
             {
                 Directory.CreateDirectory(Folder);
                 path = Path.Combine(Folder, $"CameraMode {DateTime.Now:yyyy-MM-dd HH-mm-ss}.png");
-                if (ratio <= 0f)
-                {
-                    ScreenCapture.CaptureScreenshot(path);
-                }
             }
             catch (Exception e)
             {
@@ -58,7 +55,7 @@ namespace CameraMode
 
             yield return new WaitForEndOfFrame();
 
-            if (path != null && ratio > 0f && !SaveFrame(Overlay.Frame(ratio), path))
+            if (path != null && !SaveFrame(Overlay.Frame(ratio), path))
             {
                 path = null;
             }
@@ -73,7 +70,7 @@ namespace CameraMode
             }
         }
 
-        /// <summary>Reads the framed part of the finished frame and writes it as a PNG. Must run
+        /// <summary>Reads the framed part (or all) of the finished frame and writes it as a PNG. Must run
         /// after WaitForEndOfFrame, when the back buffer holds the whole picture.</summary>
         private static bool SaveFrame(Rect frame, string path)
         {
@@ -99,7 +96,7 @@ namespace CameraMode
                         CameraModePlugin.Log.LogError($"Screenshot failed to write {path}: {e}");
                     }
                 });
-                CameraModePlugin.Log.LogInfo($"Screenshot cropped to {width}x{height} ({Overlay.Label(Settings.LetterboxBars.Value)})");
+                CameraModePlugin.Log.LogInfo($"Screenshot {width}x{height} ({Overlay.Label(Settings.LetterboxBars.Value)})");
                 return true;
             }
             catch (Exception e)

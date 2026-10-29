@@ -1,7 +1,9 @@
 using System;
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
+using UnityEngine;
 
 namespace CameraMode
 {
@@ -21,7 +23,7 @@ namespace CameraMode
         public const string PluginName = "Camera Mode";
 
         /// <summary>Must match the csproj's Version. Two places, and they have to agree.</summary>
-        public const string PluginVersion = "0.5.2";
+        public const string PluginVersion = "0.5.4";
 
         internal static ManualLogSource Log;
 
@@ -50,7 +52,7 @@ namespace CameraMode
             CameraFov.Tick();
             if (!MenuWindow.IsCapturingKey)
             {
-                if (Settings.ScreenshotKey.Value.IsDown())
+                if (IsDownWhileHoldingOthers(Settings.ScreenshotKey.Value))
                 {
                     Screenshot.Take(this);
                 }
@@ -63,6 +65,27 @@ namespace CameraMode
                     CameraModeState.ToggleFreeze();
                 }
             }
+        }
+
+        /// <summary>
+        /// KeyboardShortcut.IsDown, minus its rule that no other keyboard key may be held: BepInEx
+        /// refuses F7 while Left Alt (EFT's free look) or W is down, so a screenshot couldn't be taken
+        /// while looking around or walking. The shortcut's own modifiers still have to be held.
+        /// </summary>
+        private static bool IsDownWhileHoldingOthers(KeyboardShortcut shortcut)
+        {
+            if (shortcut.MainKey == KeyCode.None || !Input.GetKeyDown(shortcut.MainKey))
+            {
+                return false;
+            }
+            foreach (KeyCode modifier in shortcut.Modifiers)
+            {
+                if (!Input.GetKey(modifier))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private void LateUpdate()

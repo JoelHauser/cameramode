@@ -9,7 +9,7 @@
     <Nullable>disable</Nullable>
 
     <!-- Must match CameraModePlugin.PluginVersion. -->
-    <Version>0.5.2</Version>
+    <Version>0.5.4</Version>
 
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
